@@ -77,8 +77,8 @@ resource "aws_instance" "boundary_worker" {
   key_name               = aws_key_pair.boundary_worker_key.key_name
   subnet_id              = aws_subnet.boundary_hosts_subnet.id
   vpc_security_group_ids = [aws_security_group.boundary_ssh.id, aws_security_group.boundary_worker_outbound.id]
-  iam_instance_profile   = aws_iam_instance_profile.boundary_worker_dhc_profile.id
-  user_data = templatefile("worker-setup.sh.tftpl", {config = {cluster_id:var.BOUNDARY_CLUSTER_ID}})
+  iam_instance_profile   = try(aws_iam_instance_profile.boundary_worker_dhc_profile.id, "") == "" ? null : aws_iam_instance_profile.boundary_worker_dhc_profile.id
+  user_data = var.BOUNDARY_CLUSTER_ID == "" ? templatefile("worker-setup-hcp.sh.tftpl", {config = {boundary_addr:var.BOUNDARY_ADDR}}) : templatefile("worker-setup-hcp.sh.tftpl", {config = {cluster_id:var.BOUNDARY_CLUSTER_ID}})
 
   connection { 
     type        = "ssh"

@@ -28,6 +28,8 @@ public_ip=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 --header
 cat > /home/ec2-user/config.hcl <<- EOF
 disable_mlock = true
 
+hcp_boundary_cluster_id = "${config.cluster_id}"
+
 listener "tcp" {
   address     = "0.0.0.0:9202"
   purpose     = "proxy"
@@ -35,8 +37,7 @@ listener "tcp" {
 }
 
 worker {
-  public_addr       = "$public_ip:9202"
-  initial_upstreams = ["${config.boundary_addr}:9201"]
+  public_addr = "$public_ip:9202"
   auth_storage_path = "/boundary-worker/auth"
   tags {
     service-type = ["worker"],
