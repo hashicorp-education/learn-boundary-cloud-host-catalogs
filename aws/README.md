@@ -6,6 +6,9 @@ The template is meant to be used with CloudFormation and can be launched using t
 
 **Please note that usage of this template will incur costs associated with your AWS subscription.** You are responsible for these costs. See the Dynamic Host Catalogs tutorial section **Cleanup and teardown** to learn about destroying these resources after completing the tutorial.
 
+> [!IMPORTANT]  
+> Internal users should uncomment all lines in `infra/iam.tf` that start with `permissions_boundary`. This will allow resource creation within the `boundary_team_acctest_dev` account.
+
 The lab template creates:
 
 
