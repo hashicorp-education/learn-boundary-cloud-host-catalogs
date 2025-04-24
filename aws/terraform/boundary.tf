@@ -2,12 +2,16 @@
 
 ## The following code is commented out to prevent the provisioning of the Boundary resources before the credentials and other AWS resources have been provisioned. 
 
-## Uncomment lines 7 - 38, and the section you need for dynamic or static credentials to set up the Boundary host catalog and host sets.
+## Uncomment lines 7 - 42, and the section you need for dynamic or static credentials to set up the Boundary host catalog and host sets.
 
 # provider "boundary" {
 #   addr                   = var.boundary_addr
 #   auth_method_login_name = var.boundary_login_name
 #   auth_method_password   = var.boundary_login_password
+# }
+
+# variable "aws_region" {
+#   type = string
 # }
 
 # variable "boundary_addr" {
@@ -56,7 +60,7 @@
 
 #   # recommended to pass in aws secrets using a file() or using environment variables
 #   attributes_json = jsonencode({
-#     "region" = "us-east-1",
+#     "region" = var.aws_region,
 #     "disable_credential_rotation" = true,
 #     "role_arn" = var.iam_role_arn,
 #     "role_external_id" = var.iam_role_id
@@ -124,7 +128,7 @@
 
 #   # recommended to pass in aws secrets using a file() or using environment variables
 #   attributes_json = jsonencode({
-#     "region" = "us-east-1",
+#     "region" = var.aws_region,
 #     "disable_credential_rotation" = true 
 #   })
 #   secrets_json = jsonencode({
