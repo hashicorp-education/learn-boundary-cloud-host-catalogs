@@ -4,6 +4,23 @@
 # Configure the AWS VM hosts
 
 data "aws_availability_zones" "boundary" {}
+data "aws_ami" "amazon" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+output "host_public_ips" {
+  description = "boundary host public ip address"
+  value       = "${aws_instance.boundary_instance.*.public_ip}"
+}
 
 resource "aws_vpc" "boundary_hosts_vpc" {
   cidr_block           = "10.0.0.0/16"
@@ -25,12 +42,11 @@ resource "aws_subnet" "boundary_hosts_subnet" {
   }
 }
 
-# enable these resources if you want to enable SSH access to the instances later via
-# Boundary. You will also need to provide the key_name attribute to aws_instance
-#
-# resource "aws_internet_gateway" "boundary_gateway" { vpc_id =
-#   aws_vpc.boundary_hosts_vpc.id
+## enable these resources if you want to enable SSH access to the instances later as
+## Boundary targets. You will also need to provide the key_name attribute to aws_instance
 
+# resource "aws_internet_gateway" "boundary_gateway" { 
+#   vpc_id = aws_vpc.boundary_hosts_vpc.id
 #   tags = {
 #     Name = "boundary_hosts_internet_gateway"
 #   }
@@ -91,7 +107,7 @@ variable "vm_tags" {
 
 resource "aws_instance" "boundary_instance" {
   count                  = length(var.instances)
-  ami                    = "ami-083602cee93914c0c"
+  ami                    = data.aws_ami.amazon.id
   instance_type          = "t3.micro"
 #  key_name               = "NAME_OF_EC2_KEYPAIR" # enable to log in to the instances
   subnet_id              = aws_subnet.boundary_hosts_subnet.id

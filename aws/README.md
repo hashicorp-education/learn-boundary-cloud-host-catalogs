@@ -6,11 +6,15 @@ The template is meant to be used with CloudFormation and can be launched using t
 
 **Please note that usage of this template will incur costs associated with your AWS subscription.** You are responsible for these costs. See the Dynamic Host Catalogs tutorial section **Cleanup and teardown** to learn about destroying these resources after completing the tutorial.
 
+> [!IMPORTANT]  
+> Internal users should uncomment all lines in `infra/iam.tf` that start with `permissions_boundary`. This will allow resource creation within the `boundary_team_acctest_dev` account.
+
 The lab template creates:
 
-- 4 Amazon Linux instances
-  - AMI ID `ami-083602cee93914c0c`
-  - Size: `t3.micro`
+
+- 5 Amazon Linux instances
+  - AMI ID `ami-0a0d7666aecd99093`
+  - Size: `t3.micro` (worker is t2.micro)
 
 The VMs are named and tagged as follows:
 
@@ -22,5 +26,9 @@ The VMs are named and tagged as follows:
     - Tags: `service-type`: `database` and `application`: `production`
 - boundary-4-production
     - Tags: `service-type`: `database` and `application`: `prod`
+- boundary-worker
+    - Tags: `service-type`: `worker` and `cloud`: `aws`
 
 The fourth VM, `boundary-vm-4-production`, is purposefully misconfigured with a tag of `application`: `prod` that is corrected by the learner in the Dynamic Host Catalogs tutorial.
+
+The fifth VM, `boundary-worker`, is a self-managed Boundary worker instance. After registering the worker with the Boundary control plane, the dynamic host catalog plugin can use the AWS DescribeInstances API to fetch a list of hosts for Boundary to sync. The worker is only necessary when setting up dynamic credentials using AssumeRole. Static credentials provided by IAM credentials do not require a self-managed worker.

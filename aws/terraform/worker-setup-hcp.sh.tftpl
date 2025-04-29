@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+
+## install boundary-enterprise binary
+
+sudo yum install -y yum-utils shadow-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum -y install boundary-enterprise
+
+boundary version
+
+## set up boundary-worker config directory
+
+sudo mkdir /boundary-worker
+sudo mkdir /boundary-worker/config
+sudo mkdir /boundary-worker/logs
+sudo mkdir -p /boundary-worker/auth/nodecreds
+sudo chmod -R a+rwx /boundary-worker
+
+## get instance metadata and public IP
+
+metadata_token=$(curl --request PUT "http://169.254.169.254/latest/api/token" --header "X-aws-ec2-metadata-token-ttl-seconds: 3600")
+instance_metadata=$(curl -s http://169.254.169.254/latest/meta-data/ --header "X-aws-ec2-metadata-token: $metadata_token")
+public_ip=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 --header "X-aws-ec2-metadata-token: $metadata_token")
+
+## boundary-worker config file
+
+cat > /home/ec2-user/config.hcl <<- EOF
+disable_mlock = true
+
+hcp_boundary_cluster_id = "${config.cluster_id}"
+
+listener "tcp" {
+  address     = "0.0.0.0:9202"
+  purpose     = "proxy"
+  tls_disable = true
+}
+
+worker {
+  public_addr = "$public_ip:9202"
+  auth_storage_path = "/boundary-worker/auth"
+  tags {
+    service-type = ["worker"],
+    cloud = ["aws"]
+  }
+}
+EOF
+
+sudo mv /home/ec2-user/config.hcl /boundary-worker/config/config.hcl
+cat /boundary-worker/config/config.hcl
+
+## set up systemd unit file and start the worker
+
+sudo mv /home/ec2-user/boundary-worker /etc/systemd/system/boundary-worker.service
+sudo chmod 755 /etc/systemd/system/boundary-worker.service
+sudo sudo systemctl start boundary-worker.service
+sleep 5
+
+## write worker registration token to config directory
+
+journalctl -xeu boundary-worker.service | grep -o "Worker Auth Registration Request:".* | awk '{print $5}' > /boundary-worker/config/worker_auth_token
