@@ -1,0 +1,194 @@
+# Blueprint for Google Cloud Infrastructure Manager (Terraform YAML syntax)
+
+variables:
+  region:
+    default: us-central1
+  zone:
+    default: us-central1-a
+  network_name:
+    default: boundary-vm-network
+  subnet_name:
+    default: boundary-vm-subnet
+  subnet_cidr:
+    default: 10.1.0.0/24
+  vm_count:
+    default: 4
+  vm_machine_type:
+    default: e2-micro
+  vm_image:
+    default: projects/centos-cloud/global/images/family/centos-7
+  admin_username:
+    default: azureuser
+  ssh_public_key:
+    # Replace with your actual SSH public key
+    default: "azureuser:YOUR_SSH_PUBLIC_KEY_HERE"
+
+resources:
+  # VPC Network
+  - name: network
+    type: gcp-types/compute-v1:networks
+    properties:
+      name: $(vars.network_name)
+      autoCreateSubnetworks: false
+
+  # Subnet
+  - name: subnet
+    type: gcp-types/compute-v1:subnetworks
+    properties:
+      name: $(vars.subnet_name)
+      region: $(vars.region)
+      network: $(ref.network.selfLink)
+      ipCidrRange: $(vars.subnet_cidr)
+
+  # Firewall for SSH
+  - name: allow-ssh
+    type: gcp-types/compute-v1:firewalls
+    properties:
+      name: boundary-vm-allow-ssh
+      network: $(ref.network.selfLink)
+      allowed:
+        - IPProtocol: tcp
+          ports: ["22"]
+      sourceRanges: ["0.0.0.0/0"]
+      targetTags: ["boundary-vm"]
+
+  # Public IPs
+  - name: boundary-vm-1-ip
+    type: gcp-types/compute-v1:addresses
+    properties:
+      region: $(vars.region)
+  - name: boundary-vm-2-ip
+    type: gcp-types/compute-v1:addresses
+    properties:
+      region: $(vars.region)
+  - name: boundary-vm-3-ip
+    type: gcp-types/compute-v1:addresses
+    properties:
+      region: $(vars.region)
+  - name: boundary-vm-4-ip
+    type: gcp-types/compute-v1:addresses
+    properties:
+      region: $(vars.region)
+
+  # VM Instances
+  - name: boundary-vm-1
+    type: gcp-types/compute-v1:instances
+    properties:
+      zone: $(vars.zone)
+      machineType: zones/$(vars.zone)/machineTypes/$(vars.vm_machine_type)
+      tags:
+        items: ["boundary-vm", "dev"]
+      disks:
+        - deviceName: boot
+          type: PERSISTENT
+          boot: true
+          autoDelete: true
+          initializeParams:
+            sourceImage: $(vars.vm_image)
+            diskType: pd-standard
+      networkInterfaces:
+        - network: $(ref.network.selfLink)
+          subnetwork: $(ref.subnet.selfLink)
+          accessConfigs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+              natIP: $(ref.boundary-vm-1-ip.address)
+      metadata:
+        items:
+          - key: ssh-keys
+            value: $(vars.ssh_public_key)
+
+  - name: boundary-vm-2
+    type: gcp-types/compute-v1:instances
+    properties:
+      zone: $(vars.zone)
+      machineType: zones/$(vars.zone)/machineTypes/$(vars.vm_machine_type)
+      tags:
+        items: ["boundary-vm", "dev"]
+      disks:
+        - deviceName: boot
+          type: PERSISTENT
+          boot: true
+          autoDelete: true
+          initializeParams:
+            sourceImage: $(vars.vm_image)
+            diskType: pd-standard
+      networkInterfaces:
+        - network: $(ref.network.selfLink)
+          subnetwork: $(ref.subnet.selfLink)
+          accessConfigs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+              natIP: $(ref.boundary-vm-2-ip.address)
+      metadata:
+        items:
+          - key: ssh-keys
+            value: $(vars.ssh_public_key)
+
+  - name: boundary-vm-3
+    type: gcp-types/compute-v1:instances
+    properties:
+      zone: $(vars.zone)
+      machineType: zones/$(vars.zone)/machineTypes/$(vars.vm_machine_type)
+      tags:
+        items: ["boundary-vm", "production"]
+      disks:
+        - deviceName: boot
+          type: PERSISTENT
+          boot: true
+          autoDelete: true
+          initializeParams:
+            sourceImage: $(vars.vm_image)
+            diskType: pd-standard
+      networkInterfaces:
+        - network: $(ref.network.selfLink)
+          subnetwork: $(ref.subnet.selfLink)
+          accessConfigs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+              natIP: $(ref.boundary-vm-3-ip.address)
+      metadata:
+        items:
+          - key: ssh-keys
+            value: $(vars.ssh_public_key)
+
+  - name: boundary-vm-4
+    type: gcp-types/compute-v1:instances
+    properties:
+      zone: $(vars.zone)
+      machineType: zones/$(vars.zone)/machineTypes/$(vars.vm_machine_type)
+      tags:
+        items: ["boundary-vm", "prod"]
+      disks:
+        - deviceName: boot
+          type: PERSISTENT
+          boot: true
+          autoDelete: true
+          initializeParams:
+            sourceImage: $(vars.vm_image)
+            diskType: pd-standard
+      networkInterfaces:
+        - network: $(ref.network.selfLink)
+          subnetwork: $(ref.subnet.selfLink)
+          accessConfigs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+              natIP: $(ref.boundary-vm-4-ip.address)
+      metadata:
+        items:
+          - key: ssh-keys
+            value: $(vars.ssh_public_key)
+
+outputs:
+  vm_public_ips:
+    value:
+      - $(ref.boundary-vm-1-ip.address)
+      - $(ref.boundary-vm-2-ip.address)
+      - $(ref.boundary-vm-3-ip.address)
+      - $(ref.boundary-vm-4-ip.address)
+  ssh_commands:
+    value:
+      - "ssh azureuser@$(ref.boundary-vm-1-ip.address)"
+      - "ssh azureuser@$(ref.boundary-vm-2-ip.address)"
+      - "ssh azureuser@$(ref.boundary-vm-3-ip.address)"
+      - "ssh azureuser@$(ref.boundary-vm-4-ip.address)"
