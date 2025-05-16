@@ -10,6 +10,9 @@ For example, using the [GCP CLI](https://cloud.google.com/sdk/docs/install)
 
 `gcloud auth application-default login`
 
+Once authenticated, add a SSH public to GCP and update the configuration with
+the public key.
+
 The GCP Infrastructure Manager template, `gcp-dynamic-hosts.yaml` is
 expirmental. Please use the Terraform configuraiton.
 
