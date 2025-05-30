@@ -17,18 +17,18 @@ variable "vm_machine_type" {
   default = "e2-micro"
 }
 variable "vm_image" {
-  default = "projects/centos-cloud/global/images/centos-stream-9-arm64-v20250513"
+  default = "projects/centos-cloud/global/images/centos-stream-9-v20250513"
 }
-variable "admin_username" {
+variable "ssh_username" {
   default = "gcpuser"
 }
-variable "ssh_public_key" {
+variable "ssh_pub_key_file" {
   description = "SSH public key for the VM"
-  default     = "gcpuser:<replace-me>"
+  default     = "/Users/username/.ssh/gcpuser.pub"
 }
 
 provider "google" {
-  project = "hc-a97523a64a74444c93206161af5"
+  project = "hc-d0932372bdc04876af2bbeeeeee"
   region  = var.region
   zone    = var.zone
 }
@@ -92,7 +92,7 @@ resource "google_compute_instance" "vm" {
   }
 
   metadata = {
-    ssh-keys = var.ssh_public_key
+    ssh-keys = "${var.ssh_username}:${file(var.ssh_pub_key_file)}"
   }
 }
 
@@ -103,6 +103,6 @@ output "vm_public_ips" {
 output "ssh_commands" {
   value = [
     for ip in google_compute_address.vm_ip :
-    "ssh ${var.admin_username}@${ip.address}"
+    "ssh ${var.ssh_username}@${ip.address}"
   ]
 }
