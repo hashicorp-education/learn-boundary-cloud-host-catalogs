@@ -3,18 +3,17 @@
 This directory contains a `terraform/` directory for provisioning the lab
 environment with Terraform.
 
-To use the Terraform configuraiton, ensure your local environment is
+To use the Terraform configuration, ensure your local environment is
 authenticated with GCP.
 
 For example, using the [GCP CLI](https://cloud.google.com/sdk/docs/install)
 
 `gcloud auth application-default login`
 
-Once authenticated, add a SSH public to GCP and update the configuration with
-the public key.
+Once authenticated, add an SSH public key to GCP and update the configuration with the public key.
 
 The GCP Infrastructure Manager template, `gcp-dynamic-hosts.yaml` is
-expirmental. Please use the Terraform configuraiton.
+experimental. Please use the Terraform configuration.
 
 **Please note that usage of this configuration will incur costs associated with your GCP account.** You are responsible for these costs. See the Dynamic Host Catalogs tutorial section **Cleanup and teardown** to learn about destroying these resources after completing the tutorial.
 
