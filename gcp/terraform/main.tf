@@ -1,34 +1,42 @@
 variable "region" {
   default = "us-central1"
 }
+
 variable "zone" {
   default = "us-central1-a"
 }
+
 variable "network_name" {
   default = "boundary-vm-network"
 }
+
 variable "subnet_name" {
   default = "boundary-vm-subnet"
 }
+
 variable "subnet_cidr" {
   default = "10.1.0.0/24"
 }
+
 variable "vm_machine_type" {
   default = "e2-micro"
 }
+
 variable "vm_image" {
   default = "projects/centos-cloud/global/images/centos-stream-9-v20250513"
 }
+
 variable "ssh_username" {
   default = "gcpuser"
 }
+
 variable "ssh_pub_key_file" {
   description = "SSH public key for the VM"
-  default     = "/Users/username/.ssh/gcpuser.pub"
+  default     = "/Users/robinbeck/.ssh/gcpuser.pub"
 }
 
 provider "google" {
-  project = "hc-d0932372bdc04876af2bbeeeeee"
+  project = "hc-d0932372bdc04876af2bbe8561e"
   region  = var.region
   zone    = var.zone
 }
